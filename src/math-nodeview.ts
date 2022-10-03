@@ -12,10 +12,20 @@ import { keymap } from "prosemirror-keymap";
 import { newlineInCode, chainCommands, deleteSelection, liftEmptyBlock, Command } from "prosemirror-commands";
 
 // katex
-import katex, { ParseError, KatexOptions } from "katex";
+import type { KatexOptions } from "katex";
 import { nudgeCursorBackCmd, nudgeCursorForwardCmd } from "./commands/move-cursor-cmd";
 import { collapseMathCmd } from "./commands/collapse-math-cmd";
 import { IMathPluginState } from "./math-plugin";
+
+
+let katex
+// Lazy load this to keep it out of the main bundle.
+// Open question if this is necessary or if we should just trust webpack bundle splitting
+import('katex').then((module) => {
+  katex = module.default
+})
+
+
 
 //// INLINE MATH NODEVIEW //////////////////////////////////
 
@@ -222,13 +232,16 @@ export class MathView implements NodeView, ICursorPosObserver {
 			this.dom.classList.remove("empty-math");
 		}
 
+		if (!katex) {
+			this.dom.innerHTML = 'Loading katex...'
+		}
 		// render katex, but fail gracefully
 		try {
 			katex.render(texString, this._mathRenderElt, this._katexOptions);
 			this._mathRenderElt.classList.remove("parse-error");
 			this.dom.setAttribute("title", "");
 		} catch (err) {
-			if (err instanceof ParseError) {
+			if (err instanceof katex.ParseError) {
 				console.error(err);
 				this._mathRenderElt.classList.add("parse-error");
 				this.dom.setAttribute("title", err.toString());
@@ -260,7 +273,7 @@ export class MathView implements NodeView, ICursorPosObserver {
 	}
 
 	openEditor() {
-		if (this._innerView) { throw Error("inner view should not exist!"); }
+		// if (this._innerView) { throw Error("inner view should not exist!"); }
 
 		// create a nested ProseMirror view
 		this._innerView = new EditorView(this._mathSrcElt, {
