@@ -12,20 +12,19 @@ import { keymap } from "prosemirror-keymap";
 import { newlineInCode, chainCommands, deleteSelection, liftEmptyBlock, Command } from "prosemirror-commands";
 
 // katex
+import type Katex from "katex";
 import type { KatexOptions } from "katex";
 import { nudgeCursorBackCmd, nudgeCursorForwardCmd } from "./commands/move-cursor-cmd";
 import { collapseMathCmd } from "./commands/collapse-math-cmd";
 import { IMathPluginState } from "./math-plugin";
 
 
-let katex
+let katex: typeof Katex;
 // Lazy load this to keep it out of the main bundle.
 // Open question if this is necessary or if we should just trust webpack bundle splitting
 import('katex').then((module) => {
   katex = module.default
 })
-
-
 
 //// INLINE MATH NODEVIEW //////////////////////////////////
 
@@ -273,7 +272,7 @@ export class MathView implements NodeView, ICursorPosObserver {
 	}
 
 	openEditor() {
-		// if (this._innerView) { throw Error("inner view should not exist!"); }
+		if (this._innerView) { this.closeEditor(false) }
 
 		// create a nested ProseMirror view
 		this._innerView = new EditorView(this._mathSrcElt, {
