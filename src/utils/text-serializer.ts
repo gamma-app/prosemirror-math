@@ -77,7 +77,7 @@ class ProseMirrorTextSerializer<S extends Schema<any, any>> {
 
 export const mathSerializer = new ProseMirrorTextSerializer<ReturnType<typeof createMathSchema>>({
 	nodes : {
-		"math_inline"  : (node) => `$${node.textContent}$`,
-		"math_display" : (node) => `\n\n$$\n${node.textContent}\n$$`
+		"math_inline"  : (node) => `$$${node.textContent}$$`,
+		"math_display" : (node) => `\n\n$$$\n${node.textContent}\n$$$`
 	}
 });
